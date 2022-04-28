@@ -4,7 +4,7 @@ class Gyro:
         with open(f'/sys/bus/iio/devices/iio:device{self.dev_id}/in_anglvel_scale', 'r') as f:
             self.angvel_scale = float(f.read())
         self.angvel_z_file = open(f'/sys/bus/iio/devices/iio:device{self.dev_id}/in_anglvel_z_raw', 'r')
-        self.z_bias = 52.95
+        self.z_bias = 53
         
     def angular_velocity(self):
         ''' Return the angular velocity about the z axis in rad/s '''
