@@ -8,13 +8,16 @@ from std_msgs.msg import Bool, Int32
 
 # List of paths supported by the node
 waypoints = [
-    np.array([[0.5, 0.],[0.5,0.5],[0.,0.5],[0.,0.]])
+    np.array([[0.6, 1.1], [0, 0]])
+    np.array([[0, 1.8], [0, 1.1], [-0.6, 1.1]])
+    np.array([[0.6, 0.5], [0, 1.5], [0, 1.8]]),
+    np.array([[0, 0],[0, 0.5],[0.6,0.5]]),
 ]
 
 waypoint_number = 0 # Index of waypoint in path 
 path_index = 0
 path_complete = Bool()
-path_complete.data = False
+path_complete.data = True
 
 # Publish desired waypoints at the appropriate time. 
 def talker(): 
