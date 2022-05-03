@@ -12,6 +12,7 @@ class StateContainer:
 
 def read_gyro(s):
     g = Gyro()
+    g.calibrate()
     last = time.time()
     now = time.time()
     while True:
