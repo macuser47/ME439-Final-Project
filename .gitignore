@@ -4,3 +4,6 @@ devel/
 basic_motors_and_sensors/
 armrob*/
 src/ds4drv/
+*.swp
+*.swo
+**/__pycache__
