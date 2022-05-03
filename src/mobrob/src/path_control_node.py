@@ -19,6 +19,6 @@ if __name__ == "__main__":
         last = delivery_ct
 
     # Set up listener for delivery complete event to queue next path
-    del_sub = rospy.Subscriber("/Deliveries", Int32, on_delivery)
+    del_sub = rospy.Subscriber("/deliveries", Int32, on_delivery)
 
     rospy.spin()
