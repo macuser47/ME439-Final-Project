@@ -8,10 +8,11 @@ from std_msgs.msg import Bool, Int32
 
 # List of paths supported by the node
 waypoints = [
-    np.array([[0.6, 1.1], [0, 0]])
-    np.array([[0, 1.8], [0, 1.1], [-0.6, 1.1]])
-    np.array([[0.6, 0.5], [0, 1.5], [0, 1.8]]),
-    np.array([[0, 0],[0, 0.5],[0.6,0.5]]),
+    np.array([[0, 0]]),
+    np.array([[0, 1.1], [-0.6, 1.1]]),
+    np.array([[0, 1.5], [0, 1.8]]),
+    np.array([[0, 0.5],[0.6,0.5]]),
+    np.array([[0.5, 0.],[0.5,0.5],[0.,0.5],[0.,0.]]),
 ]
 
 waypoint_number = 0 # Index of waypoint in path 
@@ -36,9 +37,7 @@ def talker():
     try: 
         while not rospy.is_shutdown():
             pub_path_complete.publish(path_complete)
-            if path_complete.data:
-                break
-            else:
+            if not path_complete.data:
                 msg_waypoint.x = waypoints[path_index][waypoint_number,0]
                 msg_waypoint.y = waypoints[path_index][waypoint_number,1]
                 
@@ -53,10 +52,10 @@ def talker():
         
 def setup_new_path(msg_in):
     # FIXME: these globals are awful
-    global waypoint_number, path_complete, pub_waypoint, pub_path_complete
+    global waypoint_number, path_complete, pub_waypoint, pub_path_complete, path_index
     waypoint_number = 0
-    path_index = msg_in.value
-    path_complete.data = Bool(False)
+    path_index = msg_in.data
+    path_complete.data = False
 
 def increment_waypoint(msg_in):
     global waypoint_number, path_complete, pub_waypoint, pub_path_complete

@@ -135,6 +135,9 @@ class FPID_controller ():
         self.limit_command()
         self.command_motor()
 #        print([self.target, self.motor_command])
+
+    def reset_integral(self):
+        self.error_integral = 0
         
     def update_target_value(self, target):
         if target != self.target:

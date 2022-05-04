@@ -15,6 +15,8 @@ import encoders_and_motors as encmot
 # we import it "from" the ROS package we created it in (here "me439robot") with an extension of .msg ...
 # and actually import the message type by name (here "ME439SensorsRaw" and others)
 from mobrob_util.msg import ME439SensorsRaw, ME439WheelSpeeds, ME439MotorCommands, ME439WheelAngles, ME439WheelDisplacements
+from std_msgs.msg import Int32
+from states import RobotState
 
 
 #==============================================================================
@@ -48,6 +50,8 @@ Kd1 = rospy.get_param('/vel_right_d')
 # Max encoder increment (full speed) - useful for eliminating errors
 enc_increment_max = 1000
 
+state = None
+
 
 #==============================================================================
 # # Set up a system to coordinate the motor closed-loop control
@@ -77,8 +81,18 @@ def talker():
     #   NOTE the Callback to the set_wheel_speed_targets function, which will update the setting of a motor controller that is called from the main loop below. 
     #   NOTE also the extra arguments to that callback: the Motor Encoders (both in a list)
     sub_wheel_speeds = rospy.Subscriber('/wheel_speeds_desired', ME439WheelSpeeds, set_wheel_speed_targets,[mc0,mc1])  
+    sub_state = rospy.Subscriber('/state', Int32, set_state, [mc0,mc1])
    
     encoder_update([qe0,qe1],[mc0,mc1])
+
+def set_state(msg_in, mcs):
+    global state
+    new_state = RobotState(msg_in.data)
+    # Windup prevention
+    if new_state != state:
+        for mc in mcs:
+            mc.reset_integral()
+    state = new_state
 
 
 #==============================================================================
@@ -123,9 +137,11 @@ def encoder_update(quad_encoders, mot_controllers):
         t0 = rospy.get_rostime()   # or time.time()
         dt0 = (t0-t0_previous).to_sec()
         t0_previous = t0 # store it for the next round
+
         #update PID loops
         quad_encoders[0].update(leftEnc, dt0)
-        mot_controllers[0].update_current_value(quad_encoders[0].meters_per_second, dt0) 
+        if state == RobotState.DRIVING:
+            mot_controllers[0].update_current_value(quad_encoders[0].meters_per_second, dt0)
         pub_motorcommands_message.cmd0 = int(mot_controllers[0].motor_command)
         robot_wheel_angles_message.ang_left = quad_encoders[0].radians
         robot_wheel_displacements_message.d_left = quad_encoders[0].meters
@@ -136,7 +152,8 @@ def encoder_update(quad_encoders, mot_controllers):
         t1_previous = t1 # store it for the next round
         #update PID loops
         quad_encoders[1].update(rightEnc, dt1)
-        mot_controllers[1].update_current_value(quad_encoders[1].meters_per_second, dt1)
+        if state == RobotState.DRIVING:
+            mot_controllers[1].update_current_value(quad_encoders[1].meters_per_second, dt1)
         pub_motorcommands_message.cmd1 = int(mot_controllers[1].motor_command)
         robot_wheel_angles_message.ang_right = quad_encoders[1].radians
         robot_wheel_displacements_message.d_right = quad_encoders[1].meters
@@ -144,7 +161,8 @@ def encoder_update(quad_encoders, mot_controllers):
         publishCount = publishCount +1;
         #only publish every 10 loops to avoid overloading ROS (should be ~10Hz)
         if (publishCount % 10 == 0):
-            pub_motorcommands.publish(pub_motorcommands_message)
+            if state == RobotState.DRIVING:
+                pub_motorcommands.publish(pub_motorcommands_message)
             # Publish a message to the "/robot_wheel_angles" topic
             pub_robot_wheel_angles.publish(robot_wheel_angles_message)
             # Publish a message to the "/robot_wheel_displacements" topic
