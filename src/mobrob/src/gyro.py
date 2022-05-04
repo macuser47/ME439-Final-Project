@@ -21,7 +21,7 @@ class Gyro:
             value = int(self.angvel_z_file.readline())
             total += value
             ct += 1
-        self.z_bias = total / ct
+        self.z_bias = - total / ct
         print("bias: {}".format(self.z_bias))
 
 
@@ -35,6 +35,10 @@ if __name__ == "__main__":
     import time
 
     g = Gyro()
+    print("Calibrating gyro... (Do not move the IMU during this process!)")
+    g.calibrate(10)
+    print("Calibration complete, got bias z={}".format(g.z_bias))
+    time.sleep(5)
     angle = 0
     last = time.time()
     while True:
