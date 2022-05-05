@@ -7,3 +7,4 @@ src/ds4drv/
 *.swp
 *.swo
 **/__pycache__
+**/*~
