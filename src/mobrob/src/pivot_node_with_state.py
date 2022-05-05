@@ -10,11 +10,14 @@ import time
 import rospy
 from basic_motors_and_sensors.msg import WheelCommands
 from std_msgs.msg import Int32MultiArray, Bool, Float32, Int32
+import os
 def main():
     #Setup camera capture and resolution
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FRAME_WIDTH,320);
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240);
+    camera.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)
+    os.system("/home/pi/catkin_ws/src/mobrob/src/config_camera.sh &")
 
     # What is the size of each marker - length of a side in meters (or any other unit you are working with). Used in call to "estimatePoseSingleMarkers".
     marker_side_length = 0.061 # meters
@@ -38,18 +41,20 @@ def main():
         if msg_in.data==1:
             nonlocal state
             state=1
-            wheel_command_msg = WheelCommands(left = -70, right=70)
+            wheel_command_msg = WheelCommands(left = -100, right=100)
             pub_motor_command.publish(wheel_command_msg)
             pub_visible.publish(Bool(False))
         else:
             state=0
     state_machine = rospy.Subscriber("/state",Int32,callback)
     while True:
+        #Read a frame from the camera
+        retval, frame = camera.read()
+        if not retval:
+            continue
+        cv2.imshow("img", frame)
+        cv2.waitKey(1)
         if state==1:
-            #Read a frame from the camera
-            retval, frame = camera.read()
-            if not retval:
-                continue
             #convert to grayscale
             gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
             #try to find fiducials in the image
