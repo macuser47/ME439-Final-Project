@@ -10,6 +10,7 @@
     <node pkg="mobrob" name="state_machine" type="state_machine.py"/>
     <node pkg="mobrob" name="package_drop" type="package_drop.py"/>
     <node pkg="mobrob" name="pivot_node" type="pivot_node_with_state.py"/>
+    <node pkg="mobrob" name="gyro_node" type="gyro_node.py"/>
   </group>
 
   <!-- Pose estimation -->

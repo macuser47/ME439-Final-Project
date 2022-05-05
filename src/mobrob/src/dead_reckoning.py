@@ -11,6 +11,7 @@ import numpy as np
 import traceback 
 from geometry_msgs.msg import Pose2D
 from mobrob_util.msg import ME439WheelDisplacements
+from std_msgs.msg import Float32
 
 #==============================================================================
 # # Get parameters from rosparam
@@ -31,6 +32,9 @@ theta_estimated = 0.                   # heading angle (theta) of the robot rela
 # Global variables for the robot's wheel displacements (to keep knowledge of it from one step to the next)
 d_left_previous = 0.
 d_right_previous = 0.
+
+angle = 0.
+angle_prev = 0.
 
 # Rate to set how often the estimated "pose" is published
 f = 10.     # Hz 
@@ -55,6 +59,7 @@ def listener():
 #     #  that will be called when a message comes in. 
 #==============================================================================
     sub_wheel_disps = rospy.Subscriber('/robot_wheel_displacements', ME439WheelDisplacements, dead_reckoning)  
+    imu_angle = rospy.Subscriber('/gyro_angle', Float32, set_angle)
 
     
 #==============================================================================
@@ -97,6 +102,9 @@ def listener():
         
         r.sleep()
         
+def set_angle(msg_in):
+    global angle
+    angle = msg_in.data
 # =============================================================================
 # # Callback function for "dead-reckoning" (alternatively called "odometry")
 # =============================================================================
@@ -107,6 +115,7 @@ def dead_reckoning(msg_in):
     global wheel_width
     # More globals to store the previous values of the wheel displacements    
     global d_left_previous, d_right_previous
+    global angle, angle_prev
     
     
 ####    CODE HERE: extract the wheel displacements from the message in variable msg_in. 
@@ -132,7 +141,8 @@ def dead_reckoning(msg_in):
     # REPLACE the zeros with the proper expressions (see lecture notes). 
     # use "diff_left" and "diff_right" which were set a few lines above. 
     diff_pathlength = (diff_left+diff_right)/2
-    diff_theta = (diff_right-diff_left)/wheel_width
+    diff_theta = (angle - angle_prev)
+    angle_prev = angle
 
 ####    CODE HERE: compute the AVERAGE heading angle (theta) during the movement 
     # This makes the dead-reckoning more accurate than using just the old theta or the new one. 
@@ -141,9 +151,33 @@ def dead_reckoning(msg_in):
 ####    CODE HERE: compute the change in position and heading according to the dead-reckoning equations
     # REPLACE the zeros with the proper expressions (see lecture notes). 
     # Remember that sine and cosine are in the "numpy" package, which has been imported as "np"
+    # Y-axis aligned rotation matrix
+    rot = np.array([
+        [-np.sin(angle), -np.cos(angle), 0],
+        [np.cos(angle), -np.sin(angle), 0],
+        [0, 0, 1]
+    ])
+    if diff_theta < 1e-9:
+        t = np.array([
+            [1 - 1/6.0 * diff_theta**2, -0.5 * diff_theta, 0],
+            [0.5 * diff_theta , 1 - 1/6.0 * diff_theta**2, 0],
+            [0, 0, 1]
+        ])
+    else:
+        t = np.array([
+            [np.sin(diff_theta) / diff_theta, (np.cos(diff_theta)-1)/diff_theta, 0],
+            [(1 - np.cos(diff_theta)) / diff_theta, np.sin(diff_theta) / diff_theta, 0],
+            [0, 0, 1]
+        ])
+    dx, dy, dth = np.matmul(np.matmul(rot, t), np.array([diff_pathlength, 0, diff_theta]))
+    r_center_world_estimated[0] += dx
+    r_center_world_estimated[1] += dy
+    theta_estimated += dth
+    '''
     r_center_world_estimated[0] += diff_pathlength * -np.sin(theta_avg)     # x-direction position
     r_center_world_estimated[1] += diff_pathlength * np.cos(theta_avg)      # y-direction position
     theta_estimated += diff_theta                                           # angle
+    '''
 
 #==============================================================================
 #     End of function "dead_reckoning"
