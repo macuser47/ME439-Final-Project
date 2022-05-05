@@ -47,7 +47,7 @@ def main():
         else:
             state=0
     state_machine = rospy.Subscriber("/state",Int32,callback)
-    while True:
+    while not rospy.is_shutdown():
         #Read a frame from the camera
         retval, frame = camera.read()
         if not retval:
