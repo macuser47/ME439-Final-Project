@@ -92,6 +92,8 @@ def set_state(msg_in, mcs):
     if new_state != state:
         for mc in mcs:
             mc.reset_integral()
+        if state == RobotState.DRIVING:
+            motors.setSpeeds(0,0)
     state = new_state
 
 

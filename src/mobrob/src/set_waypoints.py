@@ -12,13 +12,12 @@ waypoints = [
     np.array([[0, 1.1], [-0.6, 1.1]]),
     np.array([[0, 1.5], [0, 1.8]]),
     np.array([[0, 0.5],[0.6,0.5]]),
-    np.array([[0.5, 0.],[0.5,0.5],[0.,0.5],[0.,0.]]),
 ]
 
 waypoint_number = 0 # Index of waypoint in path 
-path_index = 0
+path_index = 3
 path_complete = Bool()
-path_complete.data = True
+path_complete.data = False
 
 # Publish desired waypoints at the appropriate time. 
 def talker(): 

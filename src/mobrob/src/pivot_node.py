@@ -13,17 +13,17 @@ from std_msgs.msg import Int32MultiArray, Bool, Float32
 
 #Setup camera capture and resolution
 camera = cv2.VideoCapture(0)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH,1280);
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT,960);
+camera.set(cv2.CAP_PROP_FRAME_WIDTH,320);
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240);
 
-# What is the size of each marker - length of a side in meters (or any other unit you are working with). Used in call to "estimatePoseSingleMarkers". 
-marker_side_length = 0.061 # meters 
+# What is the size of each marker - length of a side in meters (or any other unit you are working with). Used in call to "estimatePoseSingleMarkers".
+marker_side_length = 0.061 # meters
 
 #comment this out to remove live display (and some other stuff below)
 # plt.figure()
 #Load calibration from pickle files (Python2 format..  you'll have to recalibrate if you use another camera)
-cam_matrix = pickle.load(open("cam_matrix.p","rb"),encoding='bytes')
-dist_matrix = pickle.load(open("dist_matrix.p","rb"),encoding='bytes')
+cam_matrix = pickle.load(open("/home/pi/catkin_ws/src/mobrob/src/cam_matrix.p","rb"),encoding='bytes')
+dist_matrix = pickle.load(open("/home/pi/catkin_ws/src/mobrob/src/dist_matrix.p","rb"),encoding='bytes')
 
 #setup ROS stuff
 rospy.init_node('aruco_node', anonymous=False)
@@ -38,6 +38,8 @@ parameters = aruco.DetectorParameters_create()
 while True:
     #Read a frame from the camera
     retval, frame = camera.read()
+    cv2.imshow("cam", frame)
+    cv2.waitKey(1)
     #convert to grayscale
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     #try to find fiducials in the image

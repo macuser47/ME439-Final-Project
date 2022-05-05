@@ -13,11 +13,11 @@ from std_msgs.msg import Int32MultiArray, Bool, Float32, Int32
 def main():
     #Setup camera capture and resolution
     camera = cv2.VideoCapture(0)
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH,1280);
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT,960);
+    camera.set(cv2.CAP_PROP_FRAME_WIDTH,320);
+    camera.set(cv2.CAP_PROP_FRAME_HEIGHT,240);
 
-    # What is the size of each marker - length of a side in meters (or any other unit you are working with). Used in call to "estimatePoseSingleMarkers". 
-    marker_side_length = 0.061 # meters 
+    # What is the size of each marker - length of a side in meters (or any other unit you are working with). Used in call to "estimatePoseSingleMarkers".
+    marker_side_length = 0.061 # meters
 
     #comment this out to remove live display (and some other stuff below)
     # plt.figure()
@@ -38,6 +38,9 @@ def main():
         if msg_in.data==1:
             nonlocal state
             state=1
+            wheel_command_msg = WheelCommands(left = -70, right=70)
+            pub_motor_command.publish(wheel_command_msg)
+            pub_visible.publish(Bool(False))
         else:
             state=0
     state_machine = rospy.Subscriber("/state",Int32,callback)
@@ -51,6 +54,8 @@ def main():
             gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
             #try to find fiducials in the image
             corners, ids, rejectedImgPoints = aruco.detectMarkers(gray,aruco_dict,parameters=parameters)
+            if (len(corners) == 0):
+                continue
             if ids is not None:
                 print("Deteted ids:")
                 for id in ids:
@@ -59,11 +64,7 @@ def main():
                 pub_visible.publish(Bool(True))
                 wheel_command_msg = WheelCommands(left = 0, right=0)
                 pub_motor_command.publish(wheel_command_msg)
-            else:
-                wheel_command_msg = WheelCommands(left = -50, right=50)
-                pub_motor_command.publish(wheel_command_msg)
-            #
-                pub_visible.publish(Bool(False))
+
 if __name__ == "__main__":
     try:
         main()
