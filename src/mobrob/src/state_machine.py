@@ -8,6 +8,7 @@ import Adafruit_PCA9685      ## Alternative library, different function: import 
 from std_msgs.msg import Int32, Float32, Bool, Int32MultiArray
 # Get all the functions from "servo_examples"
 import servo_examples as servos
+import time
 
 servos.shutdown_servos()    # Give them a clean start.
 
@@ -59,6 +60,8 @@ def main():
 # Startup stuff.
 if __name__ == '__main__':
     try:
+        # Give the other nodes a chance to initialize
+        time.sleep(10)
         main()
     except:
         traceback.print_exc()
